@@ -3,6 +3,7 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QString>
+#include <QtCore/QSize>
 
 class Config : public QObject
 {
@@ -12,6 +13,7 @@ public:
     ~Config();
 
     QString gamesPath() const;
+    QSize cardPictureSize() const;
 
     bool isValid() const;
 

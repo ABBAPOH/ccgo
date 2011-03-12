@@ -163,7 +163,7 @@
      <widget class="QWidget" name="widget_2" native="true">
       <property name="minimumSize">
        <size>
-        <width>250</width>
+        <width>0</width>
         <height>0</height>
        </size>
       </property>
@@ -175,8 +175,8 @@
         <widget class="CardView" name="cardView" native="true">
          <property name="minimumSize">
           <size>
-           <width>250</width>
-           <height>400</height>
+           <width>300</width>
+           <height>433</height>
           </size>
          </property>
         </widget>

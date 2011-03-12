@@ -23,3 +23,4 @@
 - git - move handlers - where?
 - sets - discuss
 - groups in deckmodel
+- center card image in declarative view

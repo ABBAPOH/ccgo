@@ -6,6 +6,7 @@
 #include <QtDeclarative/QDeclarativeView>
 
 #include <pictureloader.h>
+#include <config.h>
 
 class CardViewPrivate
 {
@@ -28,6 +29,7 @@ CardView::CardView(QWidget *parent) :
     d->view = new QDeclarativeView(this);
     d->pixmapItem = new QGraphicsPixmapItem;
     d->view->scene()->addItem(d->pixmapItem);
+
 }
 
 CardView::~CardView()
@@ -75,7 +77,9 @@ void CardView::updateImage(const QString &id, const QString &path)
     if (d->card.id() != id)
         return;
 
-    d->pixmapItem->setPixmap(QPixmap(path));
+    Config *config = Config::instance();
+
+    d->pixmapItem->setPixmap(QPixmap(path).scaled(config->cardPictureSize()));
 }
 
 void CardView::setPictureLoader(PictureLoader *loader)

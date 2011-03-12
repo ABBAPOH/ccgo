@@ -17,6 +17,11 @@ QString Config::gamesPath() const
     return m_gamesPath;
 }
 
+QSize Config::cardPictureSize() const
+{
+    return QSize(260, 360);
+}
+
 Config * Config::instance()
 {
     static Config *config = new Config(qApp);
