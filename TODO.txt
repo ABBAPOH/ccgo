@@ -1,0 +1,25 @@
++ Profile filter with sql and proxy model
+- game
++ game interface
++ picture manager
+- card view
+
+- database file
++ regexp
+- new tree deck model
+- xml parser (error check)
+- implement Card::isValid
+- see CardBasePrivate::CardBasePrivate
+- implement DeckModel::columnCount
+- maybe 2x size of card view?
+- handle errors in picture manager
++ check if picture already exists in picture manager
+- implement multiple loading from servers
+- export base format name
+- fix canHandle method
+- fix exporting (method CardBase::cards() not implemented)
+- sql bug with '
+- git - project structure
+- git - move handlers - where?
+- sets - discuss
+- groups in deckmodel

@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>icons/Fairytale_right_blue.png</file>
+        <file>icons/Fairytale_right_red.png</file>
+        <file>icons/Fairytale_right.png</file>
+    </qresource>
+</RCC>
