@@ -19,7 +19,7 @@ bool XmlIOHandler::canHandle(const QString &path)
     QFileInfo info(path);
 
     // TODO: implement correctly
-    if (/*info.isFile() && info.exists() && */info.suffix() == "xml") {
+    if (info.isFile() && info.exists() && info.suffix() == "xml") {
         return true;
     }
     return false;
@@ -34,10 +34,6 @@ bool XmlIOHandler::read(const QString &path, CardBase *base)
 
     QFile file(path);
     if (!file.open(QFile::ReadOnly | QFile::Text)) {
-//        QMessageBox::warning(0, ("SAX Bookmarks"),
-//                             QString("Cannot read file %1:\n%2.")
-//                             .arg(path)
-//                             .arg(file.errorString()));
         return false;
     }
 
@@ -105,4 +101,14 @@ bool XmlIOHandler::write(const QString &path, const CardBase *base)
     writer.writeEndDocument();
 
     return true;
+}
+
+QByteArray XmlIOHandler::format()
+{
+    return "xml";
+}
+
+QString XmlIOHandler::description()
+{
+    return "This is main handler for importing/exporting from/to xml files.";
 }

@@ -28,7 +28,8 @@ public:
     void removeHandler(IDataBaseIOHandler *handler);
 
     bool importBase(const QString &path);
-    bool exportBase(const QString &path);
+    bool exportBase(const QString &path, const QByteArray &format = QByteArray());
+    void clearBase();
 
 signals:
 

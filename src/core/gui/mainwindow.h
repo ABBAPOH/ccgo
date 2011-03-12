@@ -34,6 +34,7 @@ public slots:
 
     void importBase();
     void exportBase();
+    void clearBase();
 
     void onCurrentRowChange(const QModelIndex & current, const QModelIndex & previous);
 

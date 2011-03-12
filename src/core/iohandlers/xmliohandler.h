@@ -13,7 +13,8 @@ public:
     virtual bool read(const QString &, CardBase *base);
     virtual bool write(const QString &, const CardBase *base);
     virtual bool canWrite() { return true; }
-
+    virtual QByteArray format();
+    virtual QString description();
 };
 
 #endif // XMLIOHANDLER_H

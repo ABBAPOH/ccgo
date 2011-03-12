@@ -1,12 +1,14 @@
 #include "cardbase.h"
 
+#include <QtCore/QVariant>
+#include <QtCore/QStringList>
+#include <QtCore/QFileInfo>
+#include <QtGui/QApplication>
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlQuery>
 #include <QtSql/QSqlResult>
 #include <QtSql/QSqlError>
-#include <QtCore/QVariant>
-#include <QtCore/QStringList>
-#include <QtGui/QApplication>
+#include <QtSql/QSqlRecord>
 
 #include <QtCore/QDebug>
 
@@ -23,7 +25,8 @@ public:
     Game *game;
 
     QSqlDatabase db;
-    QList<IDataBaseIOHandler *> handlers;
+//    QList<IDataBaseIOHandler *> handlers;
+    QMap<QByteArray, IDataBaseIOHandler *> handlers;
 
     class GameBaseConfig
     {
@@ -36,8 +39,9 @@ public:
     } config;
     QString addCardQuery;
     QString getCardQuery;
+    QString getCardsQuery;
 
-    QList<Card> cards;
+    Card createCard(const QSqlRecord &record) const;
 };
 
 CardBasePrivate::CardBasePrivate()
@@ -57,7 +61,7 @@ CardBasePrivate::CardBasePrivate()
 
     db = QSqlDatabase::addDatabase("QSQLITE");
 //    db.setDatabaseName(":memory:");
-    db.setDatabaseName(qApp->applicationDirPath() + "/base3.sql");
+    db.setDatabaseName(qApp->applicationDirPath() + "/base.sql");
     if (!db.open())
         qWarning() << "Can't open database";
 
@@ -78,6 +82,8 @@ CardBasePrivate::CardBasePrivate()
 
     getCardQuery = QString("SELECT %1 FROM cardbase WHERE id=:id").arg(names);
 
+    getCardsQuery = QString("SELECT %1 FROM cardbase").arg(names);
+
     query.exec(QString("create table cardbase (%1)").arg(queryString));
 
     for (int i = 0; i < config.indexedColumns.size(); i++) {
@@ -86,6 +92,17 @@ CardBasePrivate::CardBasePrivate()
                         arg(config.indexedColumns[i]);
         query.exec(queryString);
     }
+}
+
+Card CardBasePrivate::createCard(const QSqlRecord &record) const
+{
+    Card result;
+
+    for (int i = 1; i< config.attributes.size(); i++) {
+        result.setAttribute(config.attributes[i], record.value(i).toString());
+    }
+
+    return result;
 }
 
 CardBase::CardBase(Game *game) :
@@ -129,23 +146,22 @@ void CardBase::addCard(const Card &card)
     }
 
     query.exec();
-
-    d->cards.append(card);
 }
 
 void CardBase::addHandler(IDataBaseIOHandler *handler)
 {
     Q_D(CardBase);
 
-    if (!d->handlers.contains(handler))
-        d->handlers.append(handler);
+    QByteArray format = handler->format();
+    if (!d->handlers.contains(format))
+        d->handlers.insert(format, handler);
 }
 
 void CardBase::removeHandler(IDataBaseIOHandler *handler)
 {
     Q_D(CardBase);
 
-    d->handlers.removeAll(handler);
+    d->handlers.remove(handler->format());
 }
 
 Card CardBase::card(const QString &id)
@@ -160,20 +176,31 @@ Card CardBase::card(const QString &id)
     query.exec();
 
 
-    Card c;
+    Card result;
 
     if (query.next()) {
-        for (int i = 1; i< d->config.attributes.size(); i++) {
-            c.setAttribute(d->config.attributes[i], query.value(i).toString());
-        }
+        result = d->createCard(query.record());
     }
 
-    return c;
+    return result;
 }
 
 QList<Card> CardBase::cards() const
 {
-    return d_func()->cards;
+    Q_D(const CardBase);
+
+    QList<Card> result;
+
+    QSqlQuery query(d->db);
+
+    query.prepare(d->getCardsQuery);
+    query.exec();
+
+    while (query.next()) {
+        result.append(d->createCard(query.record()));
+    }
+
+    return result;
 }
 
 bool CardBase::importBase(const QString &path)
@@ -181,8 +208,9 @@ bool CardBase::importBase(const QString &path)
     Q_D(CardBase);
 
     IDataBaseIOHandler *handler = 0;
-    for (int i = 0; i < d->handlers.size(); i++) {
-        IDataBaseIOHandler *h = d->handlers[i];
+    QList<IDataBaseIOHandler *> handlers = d->handlers.values();
+    for (int i = 0; i < handlers.size(); i++) {
+        IDataBaseIOHandler *h = handlers[i];
         if (h->canHandle(path)) {
             handler = h;
             break;
@@ -202,21 +230,26 @@ bool CardBase::importBase(const QString &path)
     return result;
 }
 
-bool CardBase::exportBase(const QString &path)
+bool CardBase::exportBase(const QString &path, const QByteArray &f)
 {
     Q_D(CardBase);
 
-    IDataBaseIOHandler *handler = 0;
-    for (int i = 0; i < d->handlers.size(); i++) {
-        IDataBaseIOHandler *h = d->handlers[i];
-        if (h->canHandle(path)) {
-            handler = h;
-            break;
-        }
+    QByteArray format(f);
+    if (format.isEmpty()) {
+        format = QFileInfo(path).suffix().toAscii();
     }
 
+    IDataBaseIOHandler *handler = d->handlers.value(format);
     if (!handler)
         return false;
 
     return handler->write(path, this);
+}
+
+void CardBase::clearBase()
+{
+    Q_D(CardBase);
+
+    QSqlQuery query(d->db);
+    query.exec("DELETE FROM cardbase");
 }

@@ -11,6 +11,8 @@ public:
     virtual bool canHandle(const QString &);
 
     virtual bool read(const QString &, CardBase *base);
+
+    virtual QByteArray format() { return "xmlbad"; }
 };
 
 #endif // SIMPLEXMLIOHANDLER_H

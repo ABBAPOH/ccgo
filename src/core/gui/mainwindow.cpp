@@ -47,6 +47,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSave_Deck, SIGNAL(triggered()), SLOT(saveDeck()));
     connect(ui->actionImport_CardBase, SIGNAL(triggered()), SLOT(importBase()));
     connect(ui->actionExport_CardBase, SIGNAL(triggered()), SLOT(exportBase()));
+    connect(ui->actionClear_Base, SIGNAL(triggered()), SLOT(clearBase()));
 
     connect(ui->actionClose, SIGNAL(triggered()), SLOT(close()));
 }
@@ -150,7 +151,11 @@ void MainWindow::importBase()
         QMessageBox::warning(0, ("Import Failed"),
                              QString("Cannot import base from file %1.")
                              .arg(file));
+        return;
     }
+    model->setQuery("SELECT * FROM cardbase");
+    while (model->canFetchMore())
+        model->fetchMore();
 }
 
 void MainWindow::exportBase()
@@ -163,6 +168,12 @@ void MainWindow::exportBase()
                              QString("Cannot export base to file %1.")
                              .arg(file));
     }
+}
+
+void MainWindow::clearBase()
+{
+    cardBase->clearBase();
+    model->setQuery("SELECT * FROM cardbase");
 }
 
 void MainWindow::onCurrentRowChange(const QModelIndex &current, const QModelIndex &previous)
