@@ -15,6 +15,10 @@ public:
     QString name;
     QString gamePath;
     QStringList cardAttributes;
+    QStringList cardAttributesEncoded;
+    QStringList dataBaseTypes;
+    QStringList cardTextAttributes;
+    QStringList cardTextAttributesEncoded;
     QStringList deckGroups;
     QList<QUrl> pictureServers;
     QString pictureServerPattern;
@@ -69,6 +73,23 @@ Game::Game(const QString &name, QObject *parent) :
     d->cardAttributes = settings.value("cardAttributes").toStringList();
     if (d->cardAttributes.size() == 0) {
         d->errorString = tr("cardAttributes list has zero size");
+        return;
+    }
+
+    for (int i = 0; i < d->cardAttributes.size(); i++) {
+        QString attribute = d->cardAttributes[i]; // we need a copy not to replace in list
+        d->cardAttributesEncoded.append(attribute.replace(' ', '_').toLower());
+    }
+
+    d->cardTextAttributes = settings.value("cardTextAttributes").toStringList();
+    for (int i = 0; i < d->cardTextAttributes.size(); i++) {
+        QString attribute = d->cardTextAttributes[i]; // we need a copy not to replace in list
+        d->cardTextAttributesEncoded.append(attribute.replace(' ', '_').toLower());
+    }
+
+    d->dataBaseTypes = settings.value("dataBaseTypes").toStringList();
+    if (d->dataBaseTypes.size() != d->cardAttributes.size()) {
+        d->errorString = tr("dataBaseTypes list must have same length as cardAttributes list");
         return;
     }
 
@@ -145,6 +166,26 @@ QStringList Game::cardAttributes() const
     return d_func()->cardAttributes;
 }
 
+QStringList Game::cardAttributesEncoded() const
+{
+    return d_func()->cardAttributesEncoded;
+}
+
+QStringList Game::dataBaseTypes() const
+{
+    return d_func()->dataBaseTypes;
+}
+
+QStringList Game::cardTextAttributes() const
+{
+    return d_func()->cardTextAttributes;
+}
+
+QStringList Game::cardTextAttributesEncoded() const
+{
+    return d_func()->cardTextAttributesEncoded;
+}
+
 QStringList Game::deckGroups() const
 {
     return d_func()->deckGroups;
@@ -174,4 +215,5 @@ QString Game::pictureLocalPattern() const
 {
     return d_func()->pictureLocalPattern;
 }
+
 

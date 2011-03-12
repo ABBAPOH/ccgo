@@ -31,6 +31,10 @@ public:
     QString name() const;
     QString gamePath() const;
     QStringList cardAttributes() const;
+    QStringList cardAttributesEncoded() const;
+    QStringList dataBaseTypes() const;
+    QStringList cardTextAttributes() const;
+    QStringList cardTextAttributesEncoded() const;
     QStringList deckGroups() const;
 
     QList<QUrl> pictureServers() const;

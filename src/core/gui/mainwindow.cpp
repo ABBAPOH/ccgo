@@ -59,11 +59,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::loadWindow()
 {
-    qDebug() << "loadWindow";
-
-    QTime time;
-    time.start();
-
     game = new Game("magic", this);
     cardBase = new CardBase(game);
     loader = new PictureLoader(game);
@@ -78,7 +73,8 @@ void MainWindow::loadWindow()
     proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
     ui->cardBaseView->setModel(proxy);
     ui->cardBaseView->hideColumn(0);
-//    Q_ASSERT(ui->cardBaseView->selectionModel());
+    ui->cardBaseView->verticalHeader()->hide();
+    ui->cardBaseView->setColumnWidth(1, 200);
     connect(ui->cardBaseView->selectionModel(),
             SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),
             SLOT(onCurrentRowChange(QModelIndex,QModelIndex)));
@@ -93,8 +89,6 @@ void MainWindow::loadWindow()
         if (i++%5 == 4)
         qApp->processEvents();
     }
-
-    qDebug("Time elapsed: %d ms", time.elapsed());
 }
 
 void MainWindow::saveDeck()

@@ -4,7 +4,8 @@
 + picture manager
 - card view
 
-- database file
++ database file
+- database backups
 + regexp
 - groups in deckmodel
 - new tree deck model
@@ -25,3 +26,7 @@
 - center card image in declarative view
 - error handling in iohandlers
 - CardBase::clearBase change DELETE to TRUNCATE
+- IF NOT EXIST
+- sql query in game for creating database, default parameters
+- handle errors in CardBase
+- batch exec in cardbase

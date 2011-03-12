@@ -31,6 +31,8 @@ public:
     bool exportBase(const QString &path, const QByteArray &format = QByteArray());
     void clearBase();
 
+    QString errorString() const;
+
 signals:
 
 public slots:

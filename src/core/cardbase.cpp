@@ -15,8 +15,6 @@
 #include "card.h"
 #include "game.h"
 
-// TODO: batch exec
-
 class CardBasePrivate
 {
 public:
@@ -25,81 +23,26 @@ public:
     Game *game;
 
     QSqlDatabase db;
-//    QList<IDataBaseIOHandler *> handlers;
     QMap<QByteArray, IDataBaseIOHandler *> handlers;
 
-    class GameBaseConfig
-    {
-    public:
-        QStringList attributes;
-
-        QStringList databaseNames;
-        QStringList types;
-        QStringList indexedColumns;
-    } config;
     QString addCardQuery;
     QString getCardQuery;
     QString getCardsQuery;
+    QString errorString;
 
     Card createCard(const QSqlRecord &record) const;
 };
 
 CardBasePrivate::CardBasePrivate()
 {
-    config.attributes << "id" << "Name" << "Edition" << "Edition Name" << "Color" << "Type"
-                      << "Rarity" << "Cost" << "Text" << "CMC" << "Artist" << "Legal"
-                      << "Flavor" << "No" << "Power" << "Toughness";
-    config.databaseNames << "id" << "name" << "edition" << "edition_name" << "color" << "cardtype"
-                         << "rarity" << "cost" << "cardtext" << "cmc" << "artist" << "legal"
-                         << "flavor" << "no" << "power" << "toughness";
-    config.types << "varchar(20) primary key" << "varchar(20)" << "varchar(4)" << "varchar(20)"
-                 << "varchar(3)" << "varchar(20)" << "varchar(1)" << "varchar(20)" << "text"
-                 << "int" << "varchar(20)" << "varchar(20)" << "text" << "int"
-                 << "varchar(20)" << "varchar(20)";
-
-    config.indexedColumns << "name" << "edition" << "edition_name";
-
-    db = QSqlDatabase::addDatabase("QSQLITE");
-//    db.setDatabaseName(":memory:");
-    db.setDatabaseName(qApp->applicationDirPath() + "/base.sql");
-    if (!db.open())
-        qWarning() << "Can't open database";
-
-    // TODO: move following to appropriate place
-    QSqlQuery query(db);
-    QString queryString = "";
-    for (int i = 0; i < config.attributes.size(); i++) {
-        queryString.append(QString("%1 %2").arg(config.databaseNames[i]).arg(config.types[i]));
-        if (i != config.attributes.size() - 1) {
-            queryString.append(", ");
-        }
-    }
-
-    QString names = config.databaseNames.join(", ");;
-    QString placeholders = ":" + config.databaseNames.join(", :");
-
-    addCardQuery = QString("INSERT INTO cardbase (%1) VALUES (%2)").arg(names).arg(placeholders);
-
-    getCardQuery = QString("SELECT %1 FROM cardbase WHERE id=:id").arg(names);
-
-    getCardsQuery = QString("SELECT %1 FROM cardbase").arg(names);
-
-    query.exec(QString("create table cardbase (%1)").arg(queryString));
-
-    for (int i = 0; i < config.indexedColumns.size(); i++) {
-        QString queryString = QString("CREATE INDEX %1 ON cardbase (%2)").
-                        arg(config.indexedColumns[i] + "_index").
-                        arg(config.indexedColumns[i]);
-        query.exec(queryString);
-    }
 }
 
 Card CardBasePrivate::createCard(const QSqlRecord &record) const
 {
     Card result;
 
-    for (int i = 1; i< config.attributes.size(); i++) {
-        result.setAttribute(config.attributes[i], record.value(i).toString());
+    for (int i = 1; i < game->cardAttributes().size(); i++) {
+        result.setAttribute(game->cardAttributes()[i], record.value(i).toString());
     }
 
     return result;
@@ -115,6 +58,47 @@ CardBase::CardBase(Game *game) :
     Q_ASSERT(game->isValid());
 
     d->game = game;
+
+    d->db = QSqlDatabase::addDatabase("QSQLITE");
+//    db.setDatabaseName(":memory:");
+    d->db.setDatabaseName(qApp->applicationDirPath() + "/base.sql");
+    if (!d->db.open()) {
+        qWarning() << "Can't open database";
+        return;
+    }
+
+    QStringList attributes = d->game->cardAttributes();
+    QStringList databaseNames = d->game->cardAttributesEncoded();
+    QStringList types = d->game->dataBaseTypes();
+
+    // TODO: move following to appropriate place
+    QSqlQuery query(d->db);
+    QString queryString = "";
+    for (int i = 0; i < attributes.size(); i++) {
+        queryString.append(QString("%1 %2").arg(databaseNames[i]).arg(types[i]));
+        if (i != attributes.size() - 1) {
+            queryString.append(", ");
+        }
+    }
+
+    QString names = databaseNames.join(", ");;
+    QString placeholders = ":" + databaseNames.join(", :");
+
+    d->addCardQuery = QString("INSERT INTO cardbase (%1) VALUES (%2)").arg(names).arg(placeholders);
+    d->getCardQuery = QString("SELECT %1 FROM cardbase WHERE id=:id").arg(names);
+    d->getCardsQuery = QString("SELECT %1 FROM cardbase").arg(names);
+
+    query.exec(QString("create table cardbase (%1)").arg(queryString));
+
+//    for (int i = 0; i < config.indexedColumns.size(); i++) {
+    for (int i = 0; i < databaseNames.size(); i++) {
+        QString queryString = QString("CREATE INDEX IF NOT EXIST %1 ON cardbase (%2)").
+                arg(databaseNames[i] + "_index").
+                arg(databaseNames[i]);
+//                        arg(config.indexedColumns[i] + "_index").
+//                        arg(config.indexedColumns[i]);
+        query.exec(queryString);
+    }
 }
 
 CardBase::~CardBase()
@@ -140,12 +124,18 @@ void CardBase::addCard(const Card &card)
     // TODO: reuse query with different execs
     QSqlQuery query(d->db);
 
+    QStringList databaseNames = d->game->cardAttributesEncoded();
+    QStringList cardAttributes = d->game->cardAttributes();
     query.prepare(d->addCardQuery);
-    for (int i = 0; i< d->config.databaseNames.size(); i++) {
-        query.bindValue(":" + d->config.databaseNames[i], card.attribute(d->config.attributes[i]));
+//    qDebug() << d->addCardQuery << databaseNames << cardAttributes;
+//    qDebug() << card.toString();
+    qDebug() << databaseNames;
+    qDebug() << cardAttributes;
+    for (int i = 0; i < databaseNames.size(); i++) {
+        query.bindValue(":" + databaseNames[i], card.attribute(cardAttributes[i]));
     }
 
-    query.exec();
+    qDebug() << query.exec() << query.lastError();
 }
 
 void CardBase::addHandler(IDataBaseIOHandler *handler)
@@ -252,4 +242,9 @@ void CardBase::clearBase()
 
     QSqlQuery query(d->db);
     query.exec("DELETE FROM cardbase");
+}
+
+QString CardBase::errorString() const
+{
+    return d_func()->errorString;
 }
