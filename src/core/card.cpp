@@ -85,12 +85,12 @@ bool Card::isValid() const
     return true;
 }
 
-bool Card::operator ==(const Card &other)
+bool Card::operator ==(const Card &other) const
 {
     return id() == other.id();
 }
 
-bool Card::operator !=(const Card &other)
+bool Card::operator !=(const Card &other) const
 {
     return id() != other.id();
 }

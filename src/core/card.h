@@ -49,8 +49,10 @@ public:
 
     bool isValid() const;
 
-    bool operator ==(const Card &other);
-    bool operator !=(const Card &other);
+    bool operator ==(const Card &other) const;
+    bool operator !=(const Card &other) const;
+
+//    bool operator <(const Card &other) const;
 
 private:
     QSharedDataPointer<CardData> data;

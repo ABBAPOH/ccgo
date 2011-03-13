@@ -236,7 +236,7 @@ void DeckModel::addCard(const QString &group, const Card &card)
             emit dataChanged(child, child);
         }
     } else {
-        d->deck->addCard(group, card);
+        d->deck->addCard(card, group);
     }
 }
 
@@ -267,7 +267,7 @@ void DeckModel::removeCard(const QString &group, const Card &card)
             return;
         }
     } else {
-        d->deck->removeCard(group, card);
+        d->deck->removeCard(card, group);
     }
 }
 

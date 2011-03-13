@@ -16,8 +16,8 @@
 - handle errors in picture manager
 + check if picture already exists in picture manager
 - implement multiple loading from servers
-- export base format name
-- fix canHandle method
++ export base format name
++ fix canHandle method
 + fix exporting (method CardBase::cards() not implemented)
 - sql bug with '
 + git - project structure
@@ -30,3 +30,4 @@
 - sql query in game for creating database, default parameters
 - handle errors in CardBase
 - batch exec in cardbase
+- card rendering with qml

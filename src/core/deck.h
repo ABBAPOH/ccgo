@@ -16,11 +16,21 @@ public:
     Deck(CardBase *cardBase, QObject *parent = 0);
     ~Deck();
 
-    void addCard(const QString &group, const Card &card);
-    void removeCard(const QString &group, const Card &card);
+    void addCard(const Card &card, const QString &group);
+    void setCount(const Card &card, const QString &group, int count);
 
-    QList<Card> cards(const QString &group) const;
+    void removeCard(const Card &card, const QString &group);
+    void removeAllCards(const Card &card, const QString &group);
+    void clear();
+
     QList<Card> cards() const;
+    QList<Card> cards(const QString &group) const;
+
+    QList<Card> cardsSet() const;
+    QList<Card> cardsSet(const QString &group) const;
+
+    int count(const Card &card) const;
+    int count(const Card &card, const QString &group) const;
 
     QStringList groups() const;
 
@@ -30,6 +40,7 @@ public:
 signals:
     void cardAdded(const QString &group, const Card &card);
     void cardRemoved(const QString &group, const Card &card);
+    void countChanged(const Card &card, const QString &group, int count);
 
 public slots:
 

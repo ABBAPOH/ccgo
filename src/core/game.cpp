@@ -118,7 +118,6 @@ Game::Game(const QString &name, QObject *parent) :
 
     info.refresh(); // need to correctly calculate canonical file path if cached that dir is not exists
     d->pictureFolder = info.canonicalFilePath();
-    qDebug() << "pictureFolder" << d->pictureFolder;
 
     d->pictureLocalPattern = settings.value("pictureLocalPattern").toString();
     d->pictureServerPattern = settings.value("pictureServerPattern").toString();

@@ -104,7 +104,7 @@ void MainWindow::addCard()
     QItemSelectionModel *selectionModel = ui->cardBaseView->selectionModel();
 
     foreach (QModelIndex row, selectionModel->selectedRows()) {
-        deck->addCard("Main Deck", this->cardBase->card(row.data().toString()));
+        deck->addCard(cardBase->card(row.data().toString()), "Main Deck");
     }
 }
 
@@ -113,7 +113,7 @@ void MainWindow::addCardSB()
     QItemSelectionModel *selectionModel = ui->cardBaseView->selectionModel();
 
     foreach (QModelIndex row, selectionModel->selectedRows()) {
-        deck->addCard("Sideboard", cardBase->card(row.data().toString()));
+        deck->addCard(cardBase->card(row.data().toString()), "Sideboard");
     }
 }
 
@@ -126,7 +126,7 @@ void MainWindow::removeCard()
         if (groupIndex.isValid()) {
             QModelIndex idx = deckModel->index(row.row(), 2, groupIndex);
             qDebug() << idx << idx.data() << groupIndex.data();
-            deck->removeCard(groupIndex.data().toString(), cardBase->card(idx.data().toString()));
+            deck->removeCard(cardBase->card(idx.data().toString()), groupIndex.data().toString());
         }
     }
 }
