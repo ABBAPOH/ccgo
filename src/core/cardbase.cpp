@@ -248,3 +248,8 @@ QString CardBase::errorString() const
 {
     return d_func()->errorString;
 }
+
+Game * CardBase::game() const
+{
+    return d_func()->game;
+}

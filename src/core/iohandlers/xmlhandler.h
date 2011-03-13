@@ -12,7 +12,7 @@ public:
     XmlHandler(CardBase *base);
 
     virtual bool startElement(const QString &namespaceURI, const QString &localName,
-                      const QString &qName, const QXmlAttributes &attributes);
+                      const QString &qName, const QXmlAttributes &cardAttributes);
     virtual bool endElement(const QString &namespaceURI, const QString &localName,
                     const QString &qName);
     virtual bool characters(const QString &str);
@@ -21,18 +21,17 @@ public:
 
 private:
     CardBase *cardBase;
+    Card currentCard;
 
     QString currentText;
     QString errorStr;
+
     bool readingCards;
-    QStringList attributes;
-    QStringList attributesEncoded;
-    QStringList longData;
-    QStringList longDataEncoded;
-    int currentLongData;
-
-    Card currentCard;
-
+    QStringList cardAttributes;
+    QStringList cardAttributesEncoded;
+    QStringList cardTextAttributes;
+    QStringList cardTextAttributesEncoded;
+    int currentTextAttribute;
 };
 
 #endif // XMLHANDLER_H

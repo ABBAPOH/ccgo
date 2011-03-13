@@ -32,6 +32,7 @@ public:
     void clearBase();
 
     QString errorString() const;
+    Game *game() const;
 
 signals:
 

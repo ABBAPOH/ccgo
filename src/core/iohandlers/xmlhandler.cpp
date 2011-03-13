@@ -1,31 +1,26 @@
 #include "xmlhandler.h"
 
 #include <cardbase.h>
+#include <game.h>
 
 #include <QDebug>
 
 XmlHandler::XmlHandler(CardBase *base) :
     cardBase(base),
     readingCards(false),
-    currentLongData(-1)
+    currentTextAttribute(-1)
 {
-    // HARDCODED:
-    attributes << "Name" << "Edition" << "Edition Name" << "Color" << "Type"
-               << "Rarity" << "Cost" << "Text" << "CMC" << "Artist" << "Legal"
-               << "Flavor" << "No" << "Power" << "Toughness";
-
-    for (int i = 0; i < attributes.size(); i++) {
-        QString attribute = attributes[i];
-        //bools.append(longData.contains(attribute));
-        attributesEncoded.append(attribute.replace(' ', '_'));
+    Game *game = base->game();
+    for (int i = 0; i < game->cardAttributes().size(); i++) {
+        QString attribute = game->cardAttributes()[i];
+        if (!game->cardTextAttributes().contains(attribute)) {
+            cardAttributes.append(attribute);
+            cardAttributesEncoded.append(game->cardAttributesEncoded());
+        }
     }
 
-    longData << "Text" << "Flavor";
-    for (int i = 0; i < longData.size(); i++) {
-        QString attribute = longData[i];
-        //bools.append(longData.contains(attribute));
-        longDataEncoded.append(attribute.replace(' ', '_')/*.replace('/', '-').toLower()*/);
-    }
+    cardTextAttributes = game->cardTextAttributes();
+    cardTextAttributesEncoded = game->cardTextAttributesEncoded();
 }
 
 bool XmlHandler::startElement(const QString &namespaceURI,
@@ -33,28 +28,20 @@ bool XmlHandler::startElement(const QString &namespaceURI,
                               const QString &qName,
                               const QXmlAttributes &attributes)
 {
-    //qDebug() << qName;
     if (qName == "cards") {
-        //qDebug() << "starting" << qName;
         readingCards = true;
         return true;
     }
 
     if (qName == "card") {
-        //qDebug() << "starting" << qName;
         currentCard = Card();
-        for (int i = 0; i< attributes.length(); i++) {
-//            qDebug() << attributes.value(i) << attributes.qName(i);
-        }
-        for (int i = 0; i < attributesEncoded.length(); i++) {
-//            qDebug() << attributes.value(attributesEncoded[i]);
-            currentCard.setAttribute(this->attributes[i], attributes.value(attributesEncoded[i]));
+        for (int i = 0; i < cardAttributesEncoded.length(); i++) {
+            currentCard.setAttribute(cardAttributes[i], attributes.value(cardAttributesEncoded[i]));
         }
         return true;
     }
 
-    if ( (currentLongData = longDataEncoded.indexOf(qName)) != -1) {
-        //qDebug() << "starting" << qName;
+    if ( (currentTextAttribute = cardTextAttributesEncoded.indexOf(qName)) != -1) {
         currentText = "";
         return true;
     }
@@ -66,25 +53,20 @@ bool XmlHandler::endElement(const QString &namespaceURI,
                             const QString &localName,
                             const QString &qName)
 {
-    //qDebug() << "end" << qName;
     if (qName == "cards") {
-        //qDebug() << "ending" << qName;
         readingCards = false;
         return true;
     }
 
-    if ( (currentLongData != -1) && (currentLongData == longDataEncoded.indexOf(qName)) ) {
-        //qDebug() << "ending" << qName;
-        currentCard.setAttribute(longData[currentLongData], currentText);
-        currentLongData = -1;
+    if ( (currentTextAttribute != -1) &&
+            (currentTextAttribute == cardTextAttributesEncoded.indexOf(qName)) ) {
+        currentCard.setAttribute(cardTextAttributes[currentTextAttribute], currentText);
+        currentTextAttribute = -1;
         return true;
     }
 
     if (qName == "card") {
-        //qDebug() << "ending" << qName;
         cardBase->addCard(currentCard);
-//        qDebug() << currentCard.attribute("name");
-//        qDebug() << currentCard.attribute("flavor");
         return true;
     }
 
@@ -93,15 +75,16 @@ bool XmlHandler::endElement(const QString &namespaceURI,
 
 bool XmlHandler::characters(const QString &str)
 {
-    //qDebug() << "characters" << str;
     currentText.append(str);
     return true;
 }
 
 bool XmlHandler::fatalError(const QXmlParseException &exception)
 {
-    //qDebug() << "fatalError" << exception.message() << exception.lineNumber() << exception.columnNumber();
-
+    errorStr = QString("Fatal error on line %1, column %2: %3").
+            arg(exception.message()).
+            arg(exception.lineNumber()).
+            arg(exception.columnNumber());
     return false;
 }
 
