@@ -55,4 +55,15 @@ private:
     PictureLoader *loader;
 };
 
+class Class: public QObject
+{
+    Q_OBJECT
+    Q_ENUMS(Qt::PenStyle)
+    Q_ENUMS(A)
+public:
+    enum A{ a, b ,c};
+
+
+};
+
 #endif // MAINWINDOW_H

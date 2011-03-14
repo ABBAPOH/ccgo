@@ -33,3 +33,4 @@
 - card rendering with qml
 - fix sets naming in database
 - fix loading mws deck format
+- maybe use set icons instead of names?
