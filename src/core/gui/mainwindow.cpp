@@ -41,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->addCardButton, SIGNAL(clicked()), SLOT(addCard()));
     connect(ui->addCardSBButton, SIGNAL(clicked()), SLOT(addCardSB()));
     connect(ui->removeCardButton, SIGNAL(clicked()), SLOT(removeCard()));
+    connect(ui->removeAllCardsButton, SIGNAL(clicked()), SLOT(removeAllCards()));
 
     connect(ui->filterLineEdit, SIGNAL(textChanged(QString)), SLOT(onFilter(QString)));
 
@@ -71,10 +72,15 @@ void MainWindow::loadWindow()
     proxy = new CardBaseProxyModel(this);
     proxy->setSourceModel(model);
     proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    ui->cardBaseView->horizontalHeader()->setStretchLastSection(true);
     ui->cardBaseView->setModel(proxy);
     ui->cardBaseView->hideColumn(0);
+    for (int i = 3; i < model->columnCount(); i++) {
+        ui->cardBaseView->hideColumn(i);
+    }
     ui->cardBaseView->verticalHeader()->hide();
     ui->cardBaseView->setColumnWidth(1, 200);
+    ui->cardBaseView->setColumnWidth(2, 50);
     connect(ui->cardBaseView->selectionModel(),
             SIGNAL(currentRowChanged(QModelIndex,QModelIndex)),
             SLOT(onCurrentRowChange(QModelIndex,QModelIndex)));
@@ -82,6 +88,8 @@ void MainWindow::loadWindow()
     deck = new Deck(cardBase, this);
     deckModel = new DeckModel(deck, this);
     ui->deckView->setModel(deckModel);
+    ui->deckView->hideColumn(1);
+    ui->deckView->setAlternatingRowColors(true);
 
     int i = 0;
     while (model->canFetchMore()) {
@@ -106,6 +114,7 @@ void MainWindow::addCard()
     foreach (QModelIndex row, selectionModel->selectedRows()) {
         deck->addCard(cardBase->card(row.data().toString()), "Main Deck");
     }
+    ui->deckView->expandAll();
 }
 
 void MainWindow::addCardSB()
@@ -115,6 +124,7 @@ void MainWindow::addCardSB()
     foreach (QModelIndex row, selectionModel->selectedRows()) {
         deck->addCard(cardBase->card(row.data().toString()), "Sideboard");
     }
+    ui->deckView->expandAll();
 }
 
 void MainWindow::removeCard()
@@ -122,11 +132,25 @@ void MainWindow::removeCard()
     QItemSelectionModel *selectionModel = ui->deckView->selectionModel();
 
     foreach (QModelIndex row, selectionModel->selectedRows()) {
-        QModelIndex groupIndex = row.parent();
+        QModelIndex groupIndex = deckModel->topGroupIndex(row);
         if (groupIndex.isValid()) {
-            QModelIndex idx = deckModel->index(row.row(), 2, groupIndex);
+            QModelIndex idx = deckModel->index(row.row(), 1, row.parent());
             qDebug() << idx << idx.data() << groupIndex.data();
             deck->removeCard(cardBase->card(idx.data().toString()), groupIndex.data().toString());
+        }
+    }
+}
+
+void MainWindow::removeAllCards()
+{
+    QItemSelectionModel *selectionModel = ui->deckView->selectionModel();
+
+    foreach (QModelIndex row, selectionModel->selectedRows()) {
+        QModelIndex groupIndex = deckModel->topGroupIndex(row);
+        if (groupIndex.isValid()) {
+            QModelIndex idx = deckModel->index(row.row(), 1, row.parent());
+            qDebug() << idx << idx.data() << groupIndex.data();
+            deck->removeAllCards(cardBase->card(idx.data().toString()), groupIndex.data().toString());
         }
     }
 }

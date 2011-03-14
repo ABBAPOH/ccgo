@@ -137,6 +137,17 @@
             </widget>
            </item>
            <item>
+            <widget class="QToolButton" name="removeAllCardsButton">
+             <property name="text">
+              <string>...</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../resources.qrc">
+               <normaloff>:/icons/icons/delete_card.png</normaloff>:/icons/icons/delete_card.png</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
             <spacer name="verticalSpacer_2">
              <property name="orientation">
               <enum>Qt::Vertical</enum>

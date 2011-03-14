@@ -28,12 +28,11 @@ public:
     virtual QModelIndex parent(const QModelIndex &index) const;
     virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
 
+    QModelIndex topGroupIndex(const QModelIndex &index);
+
 signals:
 
 public slots:
-    void addCard(const QString &group, const Card &card);
-    void removeCard(const QString &group, const Card &card);
-    void removeCard(const QModelIndex &index);
 
 protected:
     DeckModelPrivate *d_ptr;

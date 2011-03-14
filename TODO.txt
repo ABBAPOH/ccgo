@@ -31,3 +31,4 @@
 - handle errors in CardBase
 - batch exec in cardbase
 - card rendering with qml
+- fix sets naming in database

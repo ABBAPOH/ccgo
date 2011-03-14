@@ -30,6 +30,7 @@ public slots:
     void addCard();
     void addCardSB();
     void removeCard();
+    void removeAllCards();
     void onFilter(const QString &name);
 
     void importBase();

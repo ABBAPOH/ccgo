@@ -2,18 +2,27 @@
 #define DECKMODEL_P_H
 
 #include <QtCore/QList>
+#include <QtGui/QColor>
 
+#include <game.h>
 #include <card.h>
+#include <cardbase.h>
 #include <deck.h>
+
+quint64 qHash(const Card & card);
 
 struct TreeItem
 {
     TreeItem *m_parent;
     QList<TreeItem *> m_children;
-    Card card;
+
     int count;
     QString group;
-    bool hasCard;
+    Card card;
+    enum Type { RootItem = 0, GroupItem, CardItem };
+    Type type;
+    QMap<QString, TreeItem *> childGroups;
+    QHash<Card, TreeItem *> childCards;
 
     TreeItem(TreeItem *parent = 0)
     {
@@ -21,7 +30,31 @@ struct TreeItem
         if (parent)
             parent->m_children.append(this);
         count = 0;
-        hasCard = false;
+        type = RootItem;
+    }
+
+    TreeItem(TreeItem *parent, const QString &group)
+    {
+        m_parent = parent;
+        if (parent) {
+            parent->m_children.append(this);
+            parent->childGroups.insert(group, this);
+        }
+        type = TreeItem::GroupItem;
+        this->group = group;
+        count = 0;
+    }
+
+    TreeItem(TreeItem *parent, const Card &card)
+    {
+        m_parent = parent;
+        if (parent) {
+            parent->m_children.append(this);
+            parent->childCards.insert(card, this);
+        }
+        type = TreeItem::CardItem;
+        this->card = card;
+        count = 1;
     }
 
     ~TreeItem()
@@ -30,8 +63,13 @@ struct TreeItem
             delete item;
         }
         m_children.clear(); // ??
-        if (m_parent)
+        if (m_parent) {
             m_parent->m_children.removeAll(this);
+            if (type == GroupItem)
+                m_parent->childGroups.remove(group);
+            if (type == CardItem)
+                m_parent->childCards.remove(card);
+        }
     }
 
     int childCount()
@@ -58,22 +96,35 @@ struct TreeItem
     }
 };
 
-class DeckModelPrivate
+class DeckModel;
+class DeckModelPrivate : public QObject
 {
+    Q_OBJECT
+    Q_DECLARE_PUBLIC(DeckModel)
 public:
-    DeckModelPrivate();
+    DeckModelPrivate(DeckModel *qq);
     ~DeckModelPrivate();
 
     void buildTree();
-    TreeItem *createItem(TreeItem *groupItem, const Card &card);
-    TreeItem *findItem(const QString &group);
-    TreeItem *findItem(TreeItem *groupItem, const Card &card);
 
+    void updateItemCount(TreeItem *item, int count);
+    TreeItem *findCard(const QString &group, const Card &card);
+
+public slots:
+    void onCardAdded(const QString &group, const Card &card);
+    void onCardRemoved(const QString &group, const Card &card);
+    void onCountChanged(const Card &card, const QString &group, int count);
+
+protected:
+    DeckModel *q_ptr;
+
+public:
     TreeItem *rootItem;
-
     Deck *deck;
-
     QStringList keys;
+    // TODO: discuss
+//    QHash<QPair<QString, Card>, TreeItem*> mapToItem;
+//    QHash<QString, TreeItem*> mapFromGroup;
 };
 
 #endif // DECKMODEL_P_H

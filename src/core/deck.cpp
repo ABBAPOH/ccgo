@@ -23,8 +23,6 @@ class DeckPrivate
 public:
     CardBase *cardBase;
 
-    QHash<QString, QList<Card> > cards;
-
     QHash<QString, QHash<Card, int> > cards2;
 
 };
@@ -43,6 +41,11 @@ Deck::~Deck()
     delete d_ptr;
 }
 
+CardBase * Deck::cardBase() const
+{
+    return d_func()->cardBase;
+}
+
 void Deck::addCard(const Card &card, const QString &group)
 {
     Q_D(Deck);
@@ -51,7 +54,7 @@ void Deck::addCard(const Card &card, const QString &group)
         d->cards2[group][card] = 1;
         emit cardAdded(group, card);
     } else {
-        int count = d->cards2[group][card]++;
+        int count = ++d->cards2[group][card];
         emit countChanged(card, group, count);
     }
 }
@@ -163,34 +166,33 @@ QStringList Deck::groups() const
 
 void Deck::load(const QString &file)
 {
-    Q_D(Deck);
+//    Q_D(Deck);
 
-    QSettings settings(file, QSettings::IniFormat);
-    foreach (const QString &group, groups()) {
-        int size = settings.beginReadArray(group);
-        for (int i = 0; i < size; i++) {
-            settings.setArrayIndex(i);
-            QString id = settings.value("1").toString();
-            Card card = d->cardBase->card(id);
-            addCard(card, group);
-        }
-        settings.endArray();
-    }
+//    QSettings settings(file, QSettings::IniFormat);
+//    foreach (const QString &group, groups()) {
+//        int size = settings.beginReadArray(group);
+//        for (int i = 0; i < size; i++) {
+//            settings.setArrayIndex(i);
+//            QString id = settings.value("1").toString();
+//            Card card = d->cardBase->card(id);
+//            addCard(card, group);
+//        }
+//        settings.endArray();
+//    }
 }
 
 void Deck::save(const QString &file)
 {
-    Q_D(Deck);
+//    Q_D(Deck);
 
-    QSettings settings(file, QSettings::IniFormat);
-    foreach (const QString &group, groups()) {
-        settings.beginWriteArray(group);
-        for (int i = 0; i < d->cards[group].size(); i++) {
-            Card card = d->cards[group][i];
-            settings.setArrayIndex(i);
-            settings.setValue("1", card.id());
-        }
-        settings.endArray();
-    }
+//    QSettings settings(file, QSettings::IniFormat);
+//    foreach (const QString &group, groups()) {
+//        settings.beginWriteArray(group);
+//        for (int i = 0; i < d->cards[group].size(); i++) {
+//            Card card = d->cards[group][i];
+//            settings.setArrayIndex(i);
+//            settings.setValue("1", card.id());
+//        }
+//        settings.endArray();
+//    }
 }
-

@@ -16,6 +16,8 @@ public:
     Deck(CardBase *cardBase, QObject *parent = 0);
     ~Deck();
 
+    CardBase *cardBase() const;
+
     void addCard(const Card &card, const QString &group);
     void setCount(const Card &card, const QString &group, int count);
 

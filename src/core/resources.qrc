@@ -3,5 +3,6 @@
         <file>icons/Fairytale_right_blue.png</file>
         <file>icons/Fairytale_right_red.png</file>
         <file>icons/Fairytale_right.png</file>
+        <file>icons/delete_card.png</file>
     </qresource>
 </RCC>

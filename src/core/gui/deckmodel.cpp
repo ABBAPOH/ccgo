@@ -1,14 +1,40 @@
 #include "deckmodel.h"
 #include "deckmodel_p.h"
 
-DeckModelPrivate::DeckModelPrivate() :
+QString getCardType(const Card &card)
+{
+    // FIXME: hardcoded
+    QString type = card.attribute("Type").toString();
+    if (type.contains("Land")) {
+        return "Lands";
+    }
+    if (type.contains("Creature")) {
+        return "Creatures";
+    }
+    if (type.contains("Artifact")) {
+        return "Artifacts";
+    }
+    if (type.contains("Enchantment")) {
+        return "Enchantments";
+    }
+    if (type.contains("Instant")) {
+        return "Spells";
+    }
+    if (type.contains("Sorcery")) {
+        return "Spells";
+    }
+    if (type.contains("Planeswalker")) {
+        return "Planeswalkers";
+    }
+
+    return "Other";
+}
+
+DeckModelPrivate::DeckModelPrivate(DeckModel *qq) :
+    q_ptr(qq),
     rootItem(new TreeItem),
     deck(0)
 {
-    keys << "Name" << "id" << "Edition" << "Edition Name" << "Color" << "Type"
-                      << "Rarity" << "Cost" << "Text" << "CMC" << "Artist" << "Legal"
-                      << "Flavor" << "No" << "Power" << "Toughness";
-
 }
 
 DeckModelPrivate::~DeckModelPrivate()
@@ -18,66 +44,162 @@ DeckModelPrivate::~DeckModelPrivate()
 
 void DeckModelPrivate::buildTree()
 {
-    if (!rootItem) {
-        delete rootItem;
-    }
-    rootItem = new TreeItem();
-
     foreach (QString group, deck->groups()) {
-        TreeItem *groupItem = new TreeItem(rootItem);
-        groupItem->group = group;
-
-        foreach (Card c, deck->cards(group)) {
-            TreeItem *child = findItem(groupItem, c);
-
-            if (!child) {
-                child = createItem(groupItem, c);
-            } else {
-                child->count++;
-            }
+        foreach (Card card, deck->cards(group)) {
+            onCardAdded(group, card);
         }
     }
 }
 
-TreeItem *DeckModelPrivate::createItem(TreeItem *groupItem, const Card &card)
+void DeckModelPrivate::updateItemCount(TreeItem *item, int count)
 {
-    TreeItem *item = new TreeItem(groupItem);
-    item->card = card;
-    item->count = 1;
-    return item;
+    Q_Q(DeckModel);
+
+    if (!item)
+        return;
+
+    TreeItem *parentItem = item->parent();
+    QModelIndex parent = (parentItem == rootItem) ?
+                QModelIndex() :
+                q->createIndex(parentItem->row(), 0, parentItem);
+    QModelIndex child = q->index(item->row(), 0, parent);
+
+    item->count = count;
+
+    emit q->dataChanged(child, child);
 }
 
-TreeItem * DeckModelPrivate::findItem(const QString &group)
+TreeItem * DeckModelPrivate::findCard(const QString &group, const Card &card)
 {
-    foreach (TreeItem *item, rootItem->m_children) {
-        if (item->group == group)
-            return item;
+    QStringList groups;
+    // FIXME: hardcoded
+    groups << group << getCardType(card);
+
+    TreeItem *item = rootItem;
+    for (int i = 0; i < groups.size(); i++) {
+
+//        TreeItem* cachedItem = mapFromGroup.value(groups[i]);
+        item = item->childGroups.value(groups[i]);
+        if (!item)
+            return 0;
     }
-    return 0;
+    return item->childCards.value(card);
 }
 
-TreeItem * DeckModelPrivate::findItem(TreeItem *groupItem, const Card &c)
+void DeckModelPrivate::onCardAdded(const QString &group, const Card &card)
 {
-    if (!groupItem)
-        return 0;
+    Q_Q(DeckModel);
 
-    foreach (TreeItem *item, groupItem->m_children) {
-        if (item->card == c) {
-            return item;
+    QStringList groups;
+    // FIXME: hardcoded
+    groups << group << getCardType(card);
+
+    TreeItem *item = rootItem;
+    for (int i = 0; i < groups.size(); i++) {
+
+//        TreeItem* cachedItem = mapFromGroup.value(groups[i]);
+        TreeItem* cachedItem = item->childGroups.value(groups[i]);
+        if (cachedItem) {
+            item = cachedItem;
+
+            updateItemCount(item, item->count + 1);
+        } else {
+            QModelIndex parent = (item == rootItem) ? QModelIndex() : q->createIndex(item->row(), 0, item);
+            q->beginInsertRows(parent, item->childCount(), item->childCount());
+
+            item = new TreeItem(item, groups[i]);
+//            item->type = TreeItem::GroupItem;
+//            item->group = groups[i];
+            item->count = 1;
+//            mapFromGroup.insert(groups[i], item);
+
+            q->endInsertRows();
         }
     }
-    return 0;
+
+    QModelIndex parent = q->createIndex(item->row(), 0, item);
+    q->beginInsertRows(parent, item->childCount(), item->childCount());
+
+    item = new TreeItem(item, card);
+//    item->type = TreeItem::CardItem;
+//    item->card = card;
+//    item->count = 1;
+//    mapToItem.insert(QPair<QString, Card>(group, card), item);
+
+    q->endInsertRows();
+}
+
+void DeckModelPrivate::onCardRemoved(const QString &group, const Card &card)
+{
+    Q_Q(DeckModel);
+    // TODO: discuss
+
+    QStringList groups;
+    // FIXME: hardcoded
+    groups << group << getCardType(card);
+
+//    TreeItem *item = rootItem;
+//    for (int i = 0; i < groups.size(); i++) {
+
+////        TreeItem* cachedItem = mapFromGroup.value(groups[i]);
+//        item = item->childGroups.value(groups[i]);
+//        if (!item)
+//            return;
+//    }
+//    item = item->childCards.value(card);
+    TreeItem *item = findCard(group, card);
+//    TreeItem *item = mapToItem.value(QPair<QString, Card>(group, card));
+    if (!item)
+        return;
+//    mapToItem.remove(QPair<QString, Card>(group, card));
+
+    while (item->parent() != rootItem && item->parent()->childCount() == 1) {
+        item = item->parent();
+//        mapFromGroup.remove(item->group);
+    }
+
+    TreeItem *parentItem = item->parent();
+    QModelIndex parent = (parentItem == rootItem) ?
+                QModelIndex() :
+                q->createIndex(parentItem->row(), 0, parentItem);
+    q->beginRemoveRows(parent, item->row(), item->row());
+
+    Q_ASSERT(item != rootItem);
+    delete item;
+
+    q->endRemoveRows();
+
+}
+
+void DeckModelPrivate::onCountChanged(const Card &card, const QString &group, int count)
+{
+    // TODO: discuss
+//    TreeItem *item = mapToItem.value(QPair<QString, Card>(group, card));
+    TreeItem *item = findCard(group, card);
+    if (!item)
+        return;
+
+    int oldCount = item->count;
+    int delta = count - oldCount;
+//    item->count = count;
+    updateItemCount(item, count);
+
+    while ( (item = item->parent()) != rootItem) {
+//        item->count += delta;
+        updateItemCount(item, item->count + delta);
+    }
+
 }
 
 DeckModel::DeckModel(QObject *parent) :
     QAbstractItemModel(parent),
-    d_ptr(new DeckModelPrivate)
+    d_ptr(new DeckModelPrivate(this))
 {
 }
 
 DeckModel::DeckModel(Deck *deck, QObject *parent) :
     QAbstractItemModel(parent),
-    d_ptr(new DeckModelPrivate)
+    d_ptr(new DeckModelPrivate(this))
 {
     setDeck(deck);
 }
@@ -101,19 +223,29 @@ QVariant DeckModel::data(const QModelIndex &index, int role) const
 
     if (role == Qt::DisplayRole) {
         TreeItem *item = static_cast<TreeItem*>(index.internalPointer());
-        if (item->parent() == d->rootItem) { // it is gruop item
-            if (index.column() == 0)
+        if (index.column() == 0)
+            return item->count;
+
+        if (item->type == TreeItem::GroupItem) {
+            if (index.column() == 2)
                 return item->group;
             else
                 return "";
         } else {
-            int column = index.column();
-            if (column == 1)
-                return item->count;
-            else
-                return item->card.attribute(d->keys[column == 0 ? 0 : column - 1]);
+            return item->card.attribute(d->keys[index.column() - 1]);
         }
-        return item->row();
+    } else if (role == Qt::TextAlignmentRole) {
+        if (index.column() == 0)
+            return Qt::AlignRight;
+    } else if (role == Qt::BackgroundRole) {
+        // FIXME: Hardcoded
+        TreeItem *item = static_cast<TreeItem*>(index.internalPointer());
+        if (item->type == TreeItem::GroupItem) {
+            if (item->parent() == d->rootItem)
+                return QColor(196, 196, 196);
+            else
+                return QColor(228, 228, 228);
+        }
     }
 
     return QVariant();
@@ -132,9 +264,9 @@ QVariant DeckModel::headerData(int section, Qt::Orientation orientation, int rol
     Q_D(const DeckModel);
 
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole) {
-        if (section == 1)
+        if (section == 0)
             return "Count";
-        return d->keys[section == 0 ? 0 : section - 1];
+        return d->keys[section - 1];
     }
 
     return QVariant();
@@ -202,89 +334,31 @@ void DeckModel::setDeck(Deck *deck)
 {
     Q_D(DeckModel);
 
+    d->keys = deck->cardBase()->game()->cardAttributes();
     if (d->deck) {
-        disconnect(d->deck, SIGNAL(cardAdded(QString,Card)), this, SLOT(addCard(QString,Card)));
-        disconnect(d->deck, SIGNAL(cardRemoved(QString,Card)), this, SLOT(removeCard(QString,Card)));
+        disconnect(d->deck, SIGNAL(cardAdded(QString,Card)),
+                   d, SLOT(onCardAdded(QString,Card)));
+        disconnect(d->deck, SIGNAL(cardRemoved(QString,Card)),
+                   d, SLOT(onCardRemoved(QString,Card)));
+        disconnect(d->deck, SIGNAL(countChanged(Card,QString,int)),
+                   d, SLOT(onCountChanged(Card,QString,int)));
     }
 
-    connect(deck, SIGNAL(cardAdded(QString,Card)), SLOT(addCard(QString,Card)));
-    connect(deck, SIGNAL(cardRemoved(QString,Card)), SLOT(removeCard(QString,Card)));
+    connect(deck, SIGNAL(cardAdded(QString,Card)), d, SLOT(onCardAdded(QString,Card)));
+    connect(deck, SIGNAL(cardRemoved(QString,Card)), d, SLOT(onCardRemoved(QString,Card)));
+    connect(deck, SIGNAL(countChanged(Card,QString,int)), d, SLOT(onCountChanged(Card,QString,int)));
     d->deck = deck;
     d->buildTree();
 }
 
-void DeckModel::addCard(const QString &group, const Card &card)
+QModelIndex DeckModel::topGroupIndex(const QModelIndex &idx)
 {
     Q_D(DeckModel);
 
-    if (sender() == d->deck) {
-        TreeItem *groupItem = d->findItem(group);
-        if (!groupItem) {
-            return;
-        }
-
-        TreeItem *item = d->findItem(groupItem, card);
-        if (!item) {
-            QModelIndex parent = index(groupItem->row(), 0);
-            beginInsertRows(parent, groupItem->childCount(), groupItem->childCount());
-            item = d->createItem(groupItem, card);
-            endInsertRows();
-        } else {
-            QModelIndex parent = index(groupItem->row(), 0);
-            QModelIndex child = index(item->row(), 1, parent);
-            item->count++;
-            emit dataChanged(child, child);
-        }
-    } else {
-        d->deck->addCard(card, group);
+    TreeItem *item = static_cast<TreeItem*>(idx.internalPointer());
+    while (item->parent() != d->rootItem) {
+        item = item->parent();
     }
+    return index(item->row(), 2, QModelIndex());
 }
-
-void DeckModel::removeCard(const QString &group, const Card &card)
-{
-    Q_D(DeckModel);
-
-    if (sender() == d->deck) {
-        TreeItem *groupItem = d->findItem(group);
-        if (!groupItem) {
-            return;
-        }
-
-        TreeItem *item = d->findItem(groupItem, card);
-        if (item) {
-            if (item->count == 1) {
-                QModelIndex parent = index(groupItem->row(), 0);
-                beginRemoveRows(parent, item->row(), item->row());
-                delete item;
-                endRemoveRows();
-            } else {
-                QModelIndex parent = index(groupItem->row(), 0);
-                QModelIndex child = index(item->row(), 1, parent);
-                item->count--;
-                emit dataChanged(child, child);
-            }
-        } else {
-            return;
-        }
-    } else {
-        d->deck->removeCard(card, group);
-    }
-}
-
-void DeckModel::removeCard(const QModelIndex &index)
-{
-    Q_D(DeckModel);
-
-    if (!index.isValid()) {
-        return;
-    }
-
-    TreeItem *groupItem = static_cast<TreeItem *>(index.parent().internalPointer());
-    if (groupItem == d->rootItem)
-        return;
-
-    TreeItem *item = static_cast<TreeItem *>(index.internalPointer());
-    removeCard(groupItem->group, item->card);
-}
-
 
