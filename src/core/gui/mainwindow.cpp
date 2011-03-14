@@ -45,7 +45,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->filterLineEdit, SIGNAL(textChanged(QString)), SLOT(onFilter(QString)));
 
-    connect(ui->actionSave_Deck, SIGNAL(triggered()), SLOT(saveDeck()));
+    connect(ui->actionOpen_Deck, SIGNAL(triggered()), SLOT(openDeck()));
+    connect(ui->actionSave_Deck_As, SIGNAL(triggered()), SLOT(saveDeckAs()));
     connect(ui->actionImport_CardBase, SIGNAL(triggered()), SLOT(importBase()));
     connect(ui->actionExport_CardBase, SIGNAL(triggered()), SLOT(exportBase()));
     connect(ui->actionClear_Base, SIGNAL(triggered()), SLOT(clearBase()));
@@ -99,7 +100,16 @@ void MainWindow::loadWindow()
     }
 }
 
-void MainWindow::saveDeck()
+void MainWindow::openDeck()
+{
+    QString file = QFileDialog::getOpenFileName(this, "Open Deck", "", "*.mwdeck");
+    if (file.isEmpty())
+        return;
+    deck->load(file);
+    ui->deckView->expandAll();
+}
+
+void MainWindow::saveDeckAs()
 {
     QString file = QFileDialog::getSaveFileName();
     if (file.isEmpty())

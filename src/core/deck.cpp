@@ -3,6 +3,7 @@
 #include <QtCore/QHash>
 #include <QtCore/QList>
 #include <QtCore/QSettings>
+#include <QtCore/QFile>
 
 #include <cardbase.h>
 #include <game.h>
@@ -52,7 +53,7 @@ void Deck::addCard(const Card &card, const QString &group)
 
     if (!d->cards2[group].contains(card)) {
         d->cards2[group][card] = 1;
-        emit cardAdded(group, card);
+        emit cardAdded(card, group);
     } else {
         int count = ++d->cards2[group][card];
         emit countChanged(card, group, count);
@@ -65,6 +66,7 @@ void Deck::setCount(const Card &card, const QString &group, int count)
 
     if (count >= 0) {
         d->cards2[group][card] = count;
+        emit countChanged(card, group, count);
     }
 }
 
@@ -78,7 +80,7 @@ void Deck::removeCard(const Card &card, const QString &group)
     int &count = d->cards2[group][card];
     if (count <= 1) {
         d->cards2[group].remove(card);
-        emit cardRemoved(group, card);
+        emit cardRemoved(card, group);
     } else {
         count--;
         emit countChanged(card, group, count);
@@ -93,7 +95,7 @@ void Deck::removeAllCards(const Card &card, const QString &group)
         return;
 
     d->cards2[group].remove(card);
-    emit cardRemoved(group, card);
+    emit cardRemoved(card, group);
 }
 
 void Deck::clear()
@@ -164,9 +166,9 @@ QStringList Deck::groups() const
     return d_func()->cardBase->game()->deckGroups();
 }
 
-void Deck::load(const QString &file)
+void Deck::load(const QString &path)
 {
-//    Q_D(Deck);
+    Q_D(Deck);
 
 //    QSettings settings(file, QSettings::IniFormat);
 //    foreach (const QString &group, groups()) {
@@ -179,20 +181,84 @@ void Deck::load(const QString &file)
 //        }
 //        settings.endArray();
 //    }
+
+    QFile file(path);
+    if (!file.open(QFile::ReadOnly | QFile::Text))
+        return;
+
+    while (!file.atEnd()) {
+        bool ok = true;
+        /*QByteArray*/QString string = file.readLine();
+        string = string.trimmed();
+        if (string.startsWith("//")) {
+            qDebug() << "comment" << string;
+            continue;
+        }
+        if (string.isEmpty())
+            continue;
+        if (string.startsWith("SB:")) {
+            string = string.mid(3);
+            qDebug() << string;
+            string = string.trimmed();
+
+            QString countString = string.left(string.indexOf(' '));
+            qDebug() << countString;
+            int count = countString.toInt(&ok);
+            string = string.mid(countString.length());
+            string = string.trimmed();
+            qDebug() << ok << string << count;
+
+            Card card = d->cardBase->card(string);
+            if (card.isValid()) {
+                addCard(card, "Sideboard");
+                setCount(card, "Sideboard", count);
+            }
+        } else {
+            qDebug() << string;
+            string = string.trimmed();
+
+            QString countString = string.left(string.indexOf(' '));
+            qDebug() << countString;
+            int count = countString.toInt(&ok);
+            string = string.mid(countString.length());
+            string = string.trimmed();
+            qDebug() << ok << string << count;
+
+            Card card = d->cardBase->card(string);
+            if (card.isValid()) {
+                addCard(card, "Main Deck");
+                setCount(card, "Main Deck", count);
+            }
+        }
+    }
+
 }
 
-void Deck::save(const QString &file)
+void Deck::save(const QString &path)
 {
 //    Q_D(Deck);
 
-//    QSettings settings(file, QSettings::IniFormat);
-//    foreach (const QString &group, groups()) {
-//        settings.beginWriteArray(group);
-//        for (int i = 0; i < d->cards[group].size(); i++) {
-//            Card card = d->cards[group][i];
-//            settings.setArrayIndex(i);
-//            settings.setValue("1", card.id());
-//        }
-//        settings.endArray();
-//    }
+    QFile file(path);
+    if (!file.open(QFile::WriteOnly | QFile::Text))
+        return;
+
+    foreach (const QString &group, groups()) {
+        QList<Card> cards = cardsSet(group);
+
+        QString pattern;
+        if (group == "Sideboard")
+            pattern = "SB: %1 [%2] %3 \n";
+        else
+            pattern = "    %1 [%2] %3 \n";
+
+        file.write(QString("  // %1 \n").arg(group).toAscii());
+        for (int i = 0; i < cards.size(); i++) {
+            int count = this->count(cards[i], group);
+            file.write(pattern.
+                       arg(QString::number(count)).
+                       arg(cards[i].attribute("edition").toString()).
+                       arg(cards[i].attribute("name").toString()).
+                       toAscii());
+        }
+    }
 }

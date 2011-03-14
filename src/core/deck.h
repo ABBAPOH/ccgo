@@ -40,8 +40,8 @@ public:
     void save(const QString &file);
 
 signals:
-    void cardAdded(const QString &group, const Card &card);
-    void cardRemoved(const QString &group, const Card &card);
+    void cardAdded(const Card &card, const QString &group);
+    void cardRemoved(const Card &card, const QString &group);
     void countChanged(const Card &card, const QString &group, int count);
 
 public slots:

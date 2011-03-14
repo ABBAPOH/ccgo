@@ -46,7 +46,9 @@ void DeckModelPrivate::buildTree()
 {
     foreach (QString group, deck->groups()) {
         foreach (Card card, deck->cards(group)) {
-            onCardAdded(group, card);
+            onCardAdded(card, group);
+            int count = deck->count(card);
+            onCountChanged(card, group, count);
         }
     }
 }
@@ -77,8 +79,6 @@ TreeItem * DeckModelPrivate::findCard(const QString &group, const Card &card)
 
     TreeItem *item = rootItem;
     for (int i = 0; i < groups.size(); i++) {
-
-//        TreeItem* cachedItem = mapFromGroup.value(groups[i]);
         item = item->childGroups.value(groups[i]);
         if (!item)
             return 0;
@@ -86,7 +86,7 @@ TreeItem * DeckModelPrivate::findCard(const QString &group, const Card &card)
     return item->childCards.value(card);
 }
 
-void DeckModelPrivate::onCardAdded(const QString &group, const Card &card)
+void DeckModelPrivate::onCardAdded(const Card &card, const QString &group)
 {
     Q_Q(DeckModel);
 
@@ -97,7 +97,6 @@ void DeckModelPrivate::onCardAdded(const QString &group, const Card &card)
     TreeItem *item = rootItem;
     for (int i = 0; i < groups.size(); i++) {
 
-//        TreeItem* cachedItem = mapFromGroup.value(groups[i]);
         TreeItem* cachedItem = item->childGroups.value(groups[i]);
         if (cachedItem) {
             item = cachedItem;
@@ -108,10 +107,7 @@ void DeckModelPrivate::onCardAdded(const QString &group, const Card &card)
             q->beginInsertRows(parent, item->childCount(), item->childCount());
 
             item = new TreeItem(item, groups[i]);
-//            item->type = TreeItem::GroupItem;
-//            item->group = groups[i];
             item->count = 1;
-//            mapFromGroup.insert(groups[i], item);
 
             q->endInsertRows();
         }
@@ -121,15 +117,11 @@ void DeckModelPrivate::onCardAdded(const QString &group, const Card &card)
     q->beginInsertRows(parent, item->childCount(), item->childCount());
 
     item = new TreeItem(item, card);
-//    item->type = TreeItem::CardItem;
-//    item->card = card;
-//    item->count = 1;
-//    mapToItem.insert(QPair<QString, Card>(group, card), item);
 
     q->endInsertRows();
 }
 
-void DeckModelPrivate::onCardRemoved(const QString &group, const Card &card)
+void DeckModelPrivate::onCardRemoved(const Card &card, const QString &group)
 {
     Q_Q(DeckModel);
     // TODO: discuss
@@ -138,24 +130,12 @@ void DeckModelPrivate::onCardRemoved(const QString &group, const Card &card)
     // FIXME: hardcoded
     groups << group << getCardType(card);
 
-//    TreeItem *item = rootItem;
-//    for (int i = 0; i < groups.size(); i++) {
-
-////        TreeItem* cachedItem = mapFromGroup.value(groups[i]);
-//        item = item->childGroups.value(groups[i]);
-//        if (!item)
-//            return;
-//    }
-//    item = item->childCards.value(card);
     TreeItem *item = findCard(group, card);
-//    TreeItem *item = mapToItem.value(QPair<QString, Card>(group, card));
     if (!item)
         return;
-//    mapToItem.remove(QPair<QString, Card>(group, card));
 
     while (item->parent() != rootItem && item->parent()->childCount() == 1) {
         item = item->parent();
-//        mapFromGroup.remove(item->group);
     }
 
     TreeItem *parentItem = item->parent();
@@ -174,7 +154,6 @@ void DeckModelPrivate::onCardRemoved(const QString &group, const Card &card)
 void DeckModelPrivate::onCountChanged(const Card &card, const QString &group, int count)
 {
     // TODO: discuss
-//    TreeItem *item = mapToItem.value(QPair<QString, Card>(group, card));
     TreeItem *item = findCard(group, card);
     if (!item)
         return;
@@ -336,16 +315,16 @@ void DeckModel::setDeck(Deck *deck)
 
     d->keys = deck->cardBase()->game()->cardAttributes();
     if (d->deck) {
-        disconnect(d->deck, SIGNAL(cardAdded(QString,Card)),
-                   d, SLOT(onCardAdded(QString,Card)));
-        disconnect(d->deck, SIGNAL(cardRemoved(QString,Card)),
-                   d, SLOT(onCardRemoved(QString,Card)));
+        disconnect(d->deck, SIGNAL(cardAdded(Card,QString)),
+                   d, SLOT(onCardAdded(Card,QString)));
+        disconnect(d->deck, SIGNAL(cardRemoved(Card,QString)),
+                   d, SLOT(onCardRemoved(Card,QString)));
         disconnect(d->deck, SIGNAL(countChanged(Card,QString,int)),
                    d, SLOT(onCountChanged(Card,QString,int)));
     }
 
-    connect(deck, SIGNAL(cardAdded(QString,Card)), d, SLOT(onCardAdded(QString,Card)));
-    connect(deck, SIGNAL(cardRemoved(QString,Card)), d, SLOT(onCardRemoved(QString,Card)));
+    connect(deck, SIGNAL(cardAdded(Card,QString)), d, SLOT(onCardAdded(Card,QString)));
+    connect(deck, SIGNAL(cardRemoved(Card,QString)), d, SLOT(onCardRemoved(Card,QString)));
     connect(deck, SIGNAL(countChanged(Card,QString,int)), d, SLOT(onCountChanged(Card,QString,int)));
     d->deck = deck;
     d->buildTree();

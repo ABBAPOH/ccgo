@@ -7,8 +7,8 @@
 + database file
 - database backups
 + regexp
-- groups in deckmodel
-- new tree deck model
++ groups in deckmodel
++ new tree deck model
 - xml parser (error check)
 - implement Card::isValid
 - see CardBasePrivate::CardBasePrivate
@@ -32,3 +32,4 @@
 - batch exec in cardbase
 - card rendering with qml
 - fix sets naming in database
+- fix loading mws deck format

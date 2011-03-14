@@ -111,8 +111,8 @@ public:
     TreeItem *findCard(const QString &group, const Card &card);
 
 public slots:
-    void onCardAdded(const QString &group, const Card &card);
-    void onCardRemoved(const QString &group, const Card &card);
+    void onCardAdded(const Card &card, const QString &group);
+    void onCardRemoved(const Card &card, const QString &group);
     void onCountChanged(const Card &card, const QString &group, int count);
 
 protected:

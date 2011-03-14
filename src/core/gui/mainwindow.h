@@ -26,7 +26,8 @@ public:
 
 public slots:
     void loadWindow();
-    void saveDeck();
+    void openDeck();
+    void saveDeckAs();
     void addCard();
     void addCardSB();
     void removeCard();
@@ -36,6 +37,7 @@ public slots:
     void importBase();
     void exportBase();
     void clearBase();
+
 
     void onCurrentRowChange(const QModelIndex & current, const QModelIndex & previous);
 

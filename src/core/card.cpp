@@ -15,8 +15,8 @@ public:
 
 void CardData::setFullName() const
 {
-    Q_ASSERT(attributes.keys().contains("name") &&
-             attributes.keys().contains("edition"));
+//    Q_ASSERT(attributes.keys().contains("name") &&
+//             attributes.keys().contains("edition"));
     fullName = QString("[%2] %1").
             arg(attributes.value("name").toString()).
             arg(attributes.value("edition").toString());
@@ -82,7 +82,9 @@ bool Card::isValid() const
 //        if (!d->attributes.containsKey(key))
 //            return false;
 //    }
-    return true;
+    return attributes().keys().contains("name") &&
+                 attributes().keys().contains("edition");
+//    return true;
 }
 
 bool Card::operator ==(const Card &other) const
