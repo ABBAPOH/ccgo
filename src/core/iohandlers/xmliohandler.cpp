@@ -18,7 +18,6 @@ bool XmlIOHandler::canHandle(const QString &path)
 {
     QFileInfo info(path);
 
-    // TODO: implement correctly
     if (info.isFile() && info.exists() && info.suffix() == "xml") {
         return true;
     }

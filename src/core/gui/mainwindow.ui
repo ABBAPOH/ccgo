@@ -235,7 +235,14 @@
     <addaction name="separator"/>
     <addaction name="actionClose"/>
    </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionAdd_Set"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuTools"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionSave_Deck">
@@ -297,6 +304,11 @@
   <action name="actionClear_Base">
    <property name="text">
     <string>Clear Card Base</string>
+   </property>
+  </action>
+  <action name="actionAdd_Set">
+   <property name="text">
+    <string>Add Set...</string>
    </property>
   </action>
  </widget>

@@ -26,6 +26,8 @@ public:
 
 public slots:
     void loadWindow();
+    void onCurrentRowChange(const QModelIndex & current, const QModelIndex & previous);
+
     void openDeck();
     void saveDeckAs();
     void addCard();
@@ -38,8 +40,7 @@ public slots:
     void exportBase();
     void clearBase();
 
-
-    void onCurrentRowChange(const QModelIndex & current, const QModelIndex & previous);
+    void addSet();
 
 private:
     Ui::MainWindow *ui;

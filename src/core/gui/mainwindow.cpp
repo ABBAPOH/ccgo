@@ -1,29 +1,23 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <QtSql/QSqlTableModel>
-#include <QFileDialog>
+#include <QtSql/QSqlQueryModel>
+#include <QtGui/QMessageBox>
+#include <QtGui/QFileDialog>
 
 #include <QDebug>
-#include <QXmlSimpleReader>
-#include <iohandlers/simplexmlhandler.h>
-#include <iohandlers/simplexmliohandler.h>
-#include <iohandlers/xmliohandler.h>
-#include <cardbase.h>
-
-#include <deck.h>
-#include "deckmodel.h"
-
-#include <QMessageBox>
-#include <QTime>
-
-#include "manacostdelegate.h"
-#include <QSortFilterProxyModel>
-
-#include <pictureloader.h>
-#include "cardbaseproxymodel.h"
 
 #include <game.h>
+#include <cardbase.h>
+#include <deck.h>
+#include <pictureloader.h>
+#include <iohandlers/xmliohandler.h>
+#include <iohandlers/spoileriohandler.h>
+
+#include "cardbaseproxymodel.h"
+#include "manacostdelegate.h"
+#include "deckmodel.h"
+#include "createsetdialog.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -52,6 +46,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionClear_Base, SIGNAL(triggered()), SLOT(clearBase()));
 
     connect(ui->actionClose, SIGNAL(triggered()), SLOT(close()));
+
+    connect(ui->actionAdd_Set, SIGNAL(triggered()), SLOT(addSet()));
 }
 
 MainWindow::~MainWindow()
@@ -66,6 +62,7 @@ void MainWindow::loadWindow()
     loader = new PictureLoader(game);
     ui->cardView->setPictureLoader(loader);
     cardBase->addHandler(new XmlIOHandler);
+//    cardBase->addHandler(new SpoilerIOHandler);
 
     model = new QSqlQueryModel(this);
     model->setQuery("SELECT * FROM cardbase");
@@ -98,6 +95,13 @@ void MainWindow::loadWindow()
         if (i++%5 == 4)
         qApp->processEvents();
     }
+}
+
+void MainWindow::onCurrentRowChange(const QModelIndex &current, const QModelIndex &previous)
+{
+    QModelIndex sourceIndex = proxy->mapToSource(current);
+    QModelIndex index = model->index(sourceIndex.row(), 0, sourceIndex.parent());
+    ui->cardView->setCard(cardBase->card(index.data().toString()));
 }
 
 void MainWindow::openDeck()
@@ -204,9 +208,26 @@ void MainWindow::clearBase()
     model->setQuery("SELECT * FROM cardbase");
 }
 
-void MainWindow::onCurrentRowChange(const QModelIndex &current, const QModelIndex &previous)
+void MainWindow::addSet()
 {
-    QModelIndex sourceIndex = proxy->mapToSource(current);
-    QModelIndex index = model->index(sourceIndex.row(), 0, sourceIndex.parent());
-    ui->cardView->setCard(cardBase->card(index.data().toString()));
+    CreateSetDialog dialog;
+
+    if (!dialog.exec()) {
+        return;
+    }
+
+    QString edition = dialog.edition();
+    QString editionName = dialog.editionName();
+    QString description = dialog.description();
+    QString path = dialog.path();
+    qDebug() << path << edition << editionName << description;
+
+    SpoilerIOHandler handler;
+    handler.setEdition(edition, editionName);
+    if (handler.canHandle(path)) {
+        bool result = handler.read(path, cardBase);
+        if (!result) {
+            qDebug() << "failed to read from spoiler";
+        }
+    }
 }

@@ -34,3 +34,4 @@
 - fix sets naming in database
 - fix loading mws deck format
 - maybe use set icons instead of names?
+- check empty edition in spoiler handler

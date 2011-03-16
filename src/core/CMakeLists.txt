@@ -1,6 +1,7 @@
 set( HEADERS
     gui/cardbaseproxymodel.h
     gui/cardview.h
+    gui/createsetdialog.h
     gui/deckmodel.h
     gui/deckmodel_p.h
     gui/mainwindow.h
@@ -8,6 +9,7 @@ set( HEADERS
     iohandlers/idatabaseiohandler.h
 #    iohandlers/simplexmlhandler.h
 #    iohandlers/simplexmliohandler.h
+    iohandlers/spoileriohandler.h
     iohandlers/xmliohandler.h
     iohandlers/xmlhandler.h
     card.h
@@ -22,11 +24,13 @@ set( HEADERS
 set( SOURCES
     gui/cardbaseproxymodel.cpp
     gui/cardview.cpp
+    gui/createsetdialog.cpp
     gui/deckmodel.cpp
     gui/mainwindow.cpp
     gui/manacostdelegate.cpp
 #    iohandlers/simplexmlhandler.cpp
 #    iohandlers/simplexmliohandler.cpp
+    iohandlers/spoileriohandler.cpp
     iohandlers/xmliohandler.cpp
     iohandlers/xmlhandler.cpp
     card.cpp
@@ -39,6 +43,7 @@ set( SOURCES
    )
 
 set( FORMS
+    gui/createsetdialog.ui
     gui/mainwindow.ui
    )
 
