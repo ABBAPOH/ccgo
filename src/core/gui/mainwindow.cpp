@@ -76,7 +76,7 @@ void MainWindow::loadWindow()
     ui->cardBaseView->setModel(proxy);
     ui->cardBaseView->hideColumn(0);
     for (int i = 3; i < model->columnCount(); i++) {
-        ui->cardBaseView->hideColumn(i);
+//        ui->cardBaseView->hideColumn(i);
     }
     ui->cardBaseView->verticalHeader()->hide();
     ui->cardBaseView->setColumnWidth(1, 200);

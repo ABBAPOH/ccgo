@@ -61,6 +61,8 @@ void CardBasePrivate::addEdition(Edition *edition)
         return;
 
     if (!edition->key().isEmpty()) {
+        if (editions.contains(edition->key()))
+            return;
         editions.insert(edition->key(), edition);
     }
 
@@ -149,15 +151,17 @@ void CardBase::addCard(const Card &card)
     QStringList databaseNames = d->game->cardAttributesEncoded();
     QStringList cardAttributes = d->game->cardAttributes();
     query.prepare(d->addCardQuery);
+//    qDebug() << d->addCardQuery;
 //    qDebug() << d->addCardQuery << databaseNames << cardAttributes;
 //    qDebug() << card.toString();
-    qDebug() << databaseNames;
-    qDebug() << cardAttributes;
+//    qDebug() << databaseNames;
+//    qDebug() << cardAttributes;
     for (int i = 0; i < databaseNames.size(); i++) {
         query.bindValue(":" + databaseNames[i], card.attribute(cardAttributes[i]));
     }
 
-    qDebug() << query.exec() << query.lastError();
+    query.exec();
+//    qDebug() << "add card" << query.exec() << query.lastError();
 }
 
 void CardBase::addHandler(IDataBaseIOHandler *handler)

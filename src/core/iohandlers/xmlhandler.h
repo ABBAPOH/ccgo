@@ -27,6 +27,7 @@ private:
     QString errorStr;
 
     bool readingCards;
+    bool readingEditions;
     QStringList cardAttributes;
     QStringList cardAttributesEncoded;
     QStringList cardTextAttributes;
