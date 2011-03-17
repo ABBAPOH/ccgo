@@ -1,4 +1,5 @@
 #include "cardbase.h"
+#include "cardbase_p.h"
 
 #include <QtCore/QVariant>
 #include <QtCore/QStringList>
@@ -12,29 +13,20 @@
 
 #include <QtCore/QDebug>
 
-#include "card.h"
-#include "game.h"
-
-class CardBasePrivate
-{
-public:
-    CardBasePrivate();
-
-    Game *game;
-
-    QSqlDatabase db;
-    QMap<QByteArray, IDataBaseIOHandler *> handlers;
-
-    QString addCardQuery;
-    QString getCardQuery;
-    QString getCardsQuery;
-    QString errorString;
-
-    Card createCard(const QSqlRecord &record) const;
-};
-
 CardBasePrivate::CardBasePrivate()
 {
+}
+
+void CardBasePrivate::onEditionKeyChanged(const QString &key)
+{
+    Edition *edition = qobject_cast<Edition *>(sender());
+    if (!edition)
+        return;
+    QString oldKey = editions.key(edition);
+    if (!oldKey.isEmpty())
+        editions.remove(oldKey);
+    if (!key.isEmpty())
+        editions.insert(key, edition);
 }
 
 Card CardBasePrivate::createCard(const QSqlRecord &record) const
@@ -46,6 +38,34 @@ Card CardBasePrivate::createCard(const QSqlRecord &record) const
     }
 
     return result;
+}
+
+void CardBasePrivate::getSets()
+{
+    QSqlQuery query(db);
+    query.exec("SELECT edition, edition_name FROM cardbase GROUP BY edition, edition_name");
+    while(query.next()) {
+        QString key = query.value(0).toString();
+        if (!editions.contains(key)) {
+            Edition *edition = new Edition;
+            edition->setKey(key);
+            edition->setName(query.value(1).toString());
+            addEdition(edition);
+        }
+    }
+}
+
+void CardBasePrivate::addEdition(Edition *edition)
+{
+    if (!edition)
+        return;
+
+    if (!edition->key().isEmpty()) {
+        editions.insert(edition->key(), edition);
+    }
+
+    edition->setParent(this);
+    connect(edition, SIGNAL(keyChanged(QString)), this, SLOT(onEditionKeyChanged(QString)));
 }
 
 CardBase::CardBase(Game *game) :
@@ -99,6 +119,8 @@ CardBase::CardBase(Game *game) :
 //                        arg(config.indexedColumns[i]);
         query.exec(queryString);
     }
+
+    d->getSets();
 }
 
 CardBase::~CardBase()
@@ -165,7 +187,6 @@ Card CardBase::card(const QString &id)
     query.bindValue(":id", id);
     query.exec();
 
-
     Card result;
 
     if (query.next()) {
@@ -217,6 +238,8 @@ bool CardBase::importBase(const QString &path)
     else
         d->db.rollback();
 
+    d->getSets(); // we update information about _new_ sets
+
     return result;
 }
 
@@ -253,3 +276,21 @@ Game * CardBase::game() const
 {
     return d_func()->game;
 }
+
+void CardBase::addEdition(Edition *edition)
+{
+    Q_D(CardBase);
+    d->addEdition(edition);
+}
+
+Edition * CardBase::edition(const QString &key) const
+{
+    return d_func()->editions.value(key);
+}
+
+QList<Edition *> CardBase::editions() const
+{
+    return d_func()->editions.values();
+}
+
+

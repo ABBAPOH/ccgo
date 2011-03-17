@@ -4,12 +4,14 @@
 #include <QtSql/QSqlQueryModel>
 #include <QtGui/QMessageBox>
 #include <QtGui/QFileDialog>
+#include <QMetaProperty>
 
 #include <QDebug>
 
 #include <game.h>
 #include <cardbase.h>
 #include <deck.h>
+#include <edition.h>
 #include <pictureloader.h>
 #include <iohandlers/xmliohandler.h>
 #include <iohandlers/spoileriohandler.h>

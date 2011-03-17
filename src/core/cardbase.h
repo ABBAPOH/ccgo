@@ -8,6 +8,7 @@
 #include "iohandlers/idatabaseiohandler.h"
 
 class Game;
+class Edition;
 class CardBasePrivate;
 class CardBase : public QObject
 {
@@ -33,6 +34,10 @@ public:
 
     QString errorString() const;
     Game *game() const;
+
+    void addEdition(Edition *edition);
+    Edition *edition(const QString &key) const;
+    QList<Edition *> editions() const;
 
 signals:
 

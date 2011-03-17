@@ -14,9 +14,11 @@ set( HEADERS
     iohandlers/xmlhandler.h
     card.h
     cardbase.h
+    cardbase_p.h
     config.h
     deck.h
     game.h
+    edition.h
     pictureloader.h
     pictureloader_p.h
    )
@@ -38,6 +40,7 @@ set( SOURCES
     config.cpp
     deck.cpp
     game.cpp
+    edition.cpp
     main.cpp
     pictureloader.cpp
    )
