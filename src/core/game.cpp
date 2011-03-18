@@ -165,11 +165,6 @@ QStringList Game::cardAttributes() const
     return d_func()->cardAttributes;
 }
 
-QStringList Game::cardAttributesEncoded() const
-{
-    return d_func()->cardAttributesEncoded;
-}
-
 QStringList Game::dataBaseTypes() const
 {
     return d_func()->dataBaseTypes;
@@ -178,11 +173,6 @@ QStringList Game::dataBaseTypes() const
 QStringList Game::cardTextAttributes() const
 {
     return d_func()->cardTextAttributes;
-}
-
-QStringList Game::cardTextAttributesEncoded() const
-{
-    return d_func()->cardTextAttributesEncoded;
 }
 
 QStringList Game::deckGroups() const
@@ -215,4 +205,17 @@ QString Game::pictureLocalPattern() const
     return d_func()->pictureLocalPattern;
 }
 
+QString Game::encode(const QString &data)
+{
+    return data.toLower().replace(' ', '_');
+}
+
+QStringList Game::encode(const QStringList &data)
+{
+    QStringList result;
+    for (int i = 0; i < data.size(); i++) {
+        result.append(encode(data[i]));
+    }
+    return result;
+}
 

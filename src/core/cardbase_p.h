@@ -18,6 +18,10 @@ public:
     QSqlDatabase db;
     QMap<QByteArray, IDataBaseIOHandler *> handlers;
 
+    QStringList attributes;
+    QStringList databaseNames;
+    QStringList types;
+
     QString addCardQuery;
     QString getCardQuery;
     QString getCardsQuery;

@@ -78,22 +78,28 @@ bool XmlIOHandler::write(const QString &path, const CardBase *base)
     writer.writeStartElement("cards");
     {
         QList<Card> cards = base->cards();
-//        QStringList attributes = cards[0].attributeNames();
         QStringList attributes;
         // HARDCODED:
-        attributes << "id" << "Name" << "Edition" << "Edition Name" << "Color" << "Type"
-                       << "Rarity" << "Cost" << "Text" << "CMC" << "Artist" << "Legal"
-                       << "Flavor" << "No" << "Power" << "Toughness";
-        attributes = base->game()->cardAttributes();
-        attributes.takeFirst();
-        QStringList attributesEncoded;
+//        attributes << "id" << "Name" << "Edition" << "Edition Name" << "Color" << "Type"
+//                       << "Rarity" << "Cost" << "Text" << "CMC" << "Artist" << "Legal"
+//                       << "Flavor" << "No" << "Power" << "Toughness";
+//        attributes = base->game()->cardAttributes();
+//        attributes.takeFirst();
+
+        QStringList tmp = base->game()->cardAttributes();
+        tmp.takeFirst();
+        for (int i = 0; i < tmp.size(); i++) {
+            QString attribute = tmp[i];
+            if (!longData.contains(attribute))
+                attributes.append(attribute);
+        }
+
+        QStringList attributesEncoded = Game::encode(attributes);
+        QStringList textAttributesEncoded = Game::encode(base->game()->cardTextAttributes());
         QList<bool> bools;
 
         for (int i = 0; i < attributes.size(); i++) {
-            QString attribute = attributes[i];
-            bools.append(longData.contains(attribute));
-            attributesEncoded.append(base->game()->cardAttributesEncoded()[i+1]);
-//            attributesEncoded.append(attribute.replace(' ', '_')/*.replace('/', '-')*/);
+            bools.append(longData.contains(attributes[i]));
         }
 
         for (int j = 0; j < cards.size(); j++) {
@@ -102,18 +108,23 @@ bool XmlIOHandler::write(const QString &path, const CardBase *base)
             const Card &card = cards[j];
 
             for (int i = 0; i < attributes.size(); i++) {
-                if (!bools[i]) {
+//                if (!bools[i]) {
                     writer.writeAttribute(attributesEncoded[i],
                                           card.attribute(attributes[i]).toString());
-                }
+//                }
             }
 
-            for (int i = 0; i < attributes.size(); i++) {
-                if (bools[i]) {
-                    writer.writeTextElement(attributesEncoded[i],
-                                            card.attribute(attributes[i]).toString());
-                }
+            for (int i = 0; i < textAttributesEncoded.size(); i++) {
+                writer.writeTextElement(textAttributesEncoded[i],
+                                        card.attribute(longData[i]).toString());
             }
+
+//            for (int i = 0; i < attributes.size(); i++) {
+//                if (bools[i]) {
+//                    writer.writeTextElement(attributesEncoded[i],
+//                                            card.attribute(attributes[i]).toString());
+//                }
+//            }
 
             writer.writeEndElement();
         }

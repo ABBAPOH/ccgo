@@ -31,10 +31,8 @@ public:
     QString name() const;
     QString gamePath() const;
     QStringList cardAttributes() const;
-    QStringList cardAttributesEncoded() const;
     QStringList dataBaseTypes() const;
     QStringList cardTextAttributes() const;
-    QStringList cardTextAttributesEncoded() const;
     QStringList deckGroups() const;
 
     QList<QUrl> pictureServers() const;
@@ -44,6 +42,9 @@ public:
     QString pictureLocalPattern() const;
 
     QString errorString() const;
+
+    static QString encode(const QString &data);
+    static QStringList encode(const QStringList &data);
 
 signals:
 

@@ -16,15 +16,13 @@ XmlHandler::XmlHandler(CardBase *base) :
         QString attribute = game->cardAttributes()[i];
         if (!game->cardTextAttributes().contains(attribute) && attribute != "id") {
             cardAttributes.append(attribute);
-            cardAttributesEncoded.append(game->cardAttributesEncoded()[i]);
         }
     }
 
-    cardTextAttributes = game->cardTextAttributes();
-    cardTextAttributesEncoded = game->cardTextAttributesEncoded();
+    cardAttributesEncoded = Game::encode(cardAttributes);
 
-    qDebug() << cardAttributes;
-    qDebug() << cardAttributesEncoded;
+    cardTextAttributes = game->cardTextAttributes();
+    cardTextAttributesEncoded = Game::encode(cardTextAttributes);
 }
 
 bool XmlHandler::startElement(const QString &namespaceURI,
