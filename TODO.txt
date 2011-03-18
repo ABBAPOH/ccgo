@@ -35,3 +35,4 @@
 - fix loading mws deck format
 - maybe use set icons instead of names?
 - check empty edition in spoiler handler
+- remove edition names
